@@ -1,26 +1,37 @@
-# Project record
+# Project Record
+
+## Identity
+
+- **Module**: `github.com/Trysac/u142-distributed-lock`
+- **Package**: `distributedlock`
+- **Language**: Go 1.23
 
 ## Objective
 
-Lease-based locks with monotonic fencing tokens in Go: a Store interface, an in-memory store with an injected clock, a blocking Locker and a fence checker
+To provide a lease-based locking mechanism in Go that prevents data corruption during process pauses by enforcing strict fencing tokens. The package provides a verifiable `Store` interface, an in-memory testable store, a retry-capable `Locker`, and a resource-side `Fence` checker.
 
 ## Scope
 
-- In scope: the public API documented in [README.md](../README.md), documented and tested.
-- Out of scope: anything that needs dependencies or I/O without an accepted ADR.
+- Injected clock support for deterministic testing.
+- Strictly monotonic token generation that survives lease release.
+- Lease lifecycle management (acquire, renew, release).
+- Monotonic token validation via `Fence.Check`.
+- Blocking lock acquisition with retry logic.
+- Support for key/owner validation and capacity limits.
 
-## Timeline
+## Out of Scope
 
-| Date | Event |
-|---|---|
-| 2026 | Repository created from the factory utility template. |
+- Redlock algorithm implementations.
+- Read-write locks.
+- Reentrant locking patterns.
+- Automatic background renewal goroutines (lifecycle is caller-managed).
 
-## Effort metrics
+## Factory run u142 (measured from API usage)
 
-Measured values only; a value that has not been measured stays "pending measurement".
+| Phase | Model | Batch | Input | Output | Cache write | Cache read | Cost (USD) |
+|---|---|---|---|---|---|---|---|
+| generation | gemini-3.8-flash | yes | 4080 | 46790 | 0 | 0 | 0.0893 |
+| audit | gemini-3.1-flash-lite | no | 26684 | 105 | 0 | 20364 | 0.0073 |
+| docs | gemini-3.1-flash-lite | no | 4884 | 1470 | 0 | 0 | 0.0034 |
 
-| Metric | Value |
-|---|---|
-| Tokens (input / output) | pending measurement |
-| Hours (human) | pending measurement |
-| Cost (USD) | pending measurement |
+Total: $0.1000. Prices: Anthropic list prices.

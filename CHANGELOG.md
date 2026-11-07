@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Implement lease-based distributed locking with monotonic fencing tokens, in-memory store, blocking locker, and fence checker.
 - Initial project structure from the factory utility template.
