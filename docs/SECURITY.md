@@ -1,20 +1,12 @@
-# Security notes
+# Security and Threat Model
 
-## Threat model
+## Defended Threats
 
-`github.com/Trysac/u142-distributed-lock` is a pure library without I/O. The main risks are:
+- **Process Pauses**: Protects against stale writes via monotonically increasing fencing tokens. Protected resources should validate these tokens (e.g., `UPDATE ... WHERE fence_token <= $1`).
+- **Resource Exhaustion**: `MemoryStore` and `Fence` have strictly enforced capacity limits (default 10,000). Key/owner lengths are limited to 1-256 bytes to prevent DoS via invalid inputs.
+- **Clock Anomalies**: If the clock moves backward, leases appear longer, preserving mutual exclusion. If the clock moves forward, leases expire faster, favoring safety over liveness.
 
-- **Supply chain**: a compromised dependency or CI action. Mitigation: standard library only,
-  `go.sum` verification, `govulncheck` in the local gates, Dependabot weekly updates, actions
-  pinned by commit SHA, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and return
-  explicit errors; never use `unsafe` or `os/exec` with untrusted data.
+## Not Defended
 
-## Publishing
-
-Releases are git tags served through the Go module proxy and checksum database. No registry token
-is stored in the repository.
-
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+- **Process Isolation**: This is an in-process coordinator (`MemoryStore`). For multi-node deployments, the user must implement `Store` using a shared backend (e.g., PostgreSQL or Redis) to maintain state consistency across physical nodes.
+- **Storage-Side Persistence**: `MemoryStore` is volatile. State loss occurs on process termination.

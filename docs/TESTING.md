@@ -1,25 +1,13 @@
-# Testing
+# Testing Guide
 
-## Running
+## Overview
 
-```sh
-go test -cover .          # tests with coverage summary
-go run ./scripts/check    # every gate, as CI and the factory run it
-```
+Tests are located in `distributedlock_test`. They focus on deterministic execution and public API correctness without side effects.
 
-## Policy
+## Test Coverage
 
-- Statement coverage of the library (every package except `scripts/`) must stay at or above 80 %;
-  the gate fails below it.
-- Tests live in package `distributedlock_test` and exercise the public API only. They assert every
-  observable effect: return values, returned errors (`errors.Is`) and their messages.
-- Prefer table-driven tests with `t.Run` subtests; document usage with runnable `Example`
-  functions, which `go test` verifies through their `// Output:` comments.
-- The race detector runs whenever cgo and a C compiler are available (always in Linux CI); the
-  gate prints why when it has to run without it.
-- Each bug fix starts with a failing test that reproduces it.
-- Tests are deterministic: no network, no wall clock, no dependence on test order.
-
-## Layout
-
-`<file>_test.go` sits next to the file it tests. Fixtures and golden files go in `testdata/`.
+- **Clock Injection**: `fakeClock` verifies TTL expiration, renewal cutoffs, and backwards clock jumps.
+- **Race Conditions**: High-concurrency tests execute with `go test -race` (e.g., 100 goroutines competing for a lock, verifying exactly 1 success and 99 `ErrHeld`).
+- **Retry/Locker Logic**: Injected sleep functions allow testing of retry counts and context cancellation handling without wall-clock waits.
+- **Boundary Conditions**: Tests cover empty keys, 257-byte keys, zero TTL, and capacity saturation (eviction).
+- **LRU Cache**: Explicit assertions that `Fence` evicts the least recently checked entry when full.
